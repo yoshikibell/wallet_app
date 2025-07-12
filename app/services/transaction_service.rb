@@ -11,6 +11,7 @@ class TransactionService
 
       transaction = Transaction.create!(
         wallet: locked_wallet,
+        initiator: locked_wallet,
         amount: amount,
         transaction_type: :deposit,
         status: :pending
@@ -34,6 +35,7 @@ class TransactionService
 
       transaction = Transaction.create!(
         wallet: locked_wallet,
+        initiator: locked_wallet,
         amount: amount,
         transaction_type: :withdrawal,
         status: :pending
