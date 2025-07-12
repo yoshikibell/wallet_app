@@ -10,9 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_12_085517) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_12_092813) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "transactions", force: :cascade do |t|
+    t.bigint "wallet_id", null: false
+    t.bigint "initiator_id"
+    t.bigint "receiver_id"
+    t.decimal "amount", precision: 15, scale: 2, null: false
+    t.integer "transaction_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["initiator_id"], name: "index_transactions_on_initiator_id"
+    t.index ["receiver_id"], name: "index_transactions_on_receiver_id"
+    t.index ["wallet_id"], name: "index_transactions_on_wallet_id"
+  end
 
   create_table "users", force: :cascade do |t|
     t.string "name"
@@ -30,5 +43,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_12_085517) do
     t.index ["user_id"], name: "index_wallets_on_user_id", unique: true
   end
 
+  add_foreign_key "transactions", "wallets"
+  add_foreign_key "transactions", "wallets", column: "initiator_id"
+  add_foreign_key "transactions", "wallets", column: "receiver_id"
   add_foreign_key "wallets", "users"
 end
