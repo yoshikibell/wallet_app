@@ -16,41 +16,55 @@ users_data = [
   {
     name: "Erlich Bachman",
     email: "erlich@aviato.com"
-  },
-  {
-    name: "Jian Yang",
-    email: "jian.yang@newpiedpiper.com"
   }
 ]
 
-puts "=== API Test Users ==="
+puts "\n=== Test Users ==="
 
-users_data.each do |user_data|
-  user = User.find_or_create_by(email: user_data[:email]) do |u|
+users = users_data.map do |user_data|
+  User.find_or_create_by(email: user_data[:email]) do |u|
     u.name = user_data[:name]
   end.reload
+end
 
+users.each do |user|
   token = JWT.encode(
     {
       user_id: user.id,
-      email: user.email,
       exp: 1.year.from_now.to_i
     },
     Rails.application.secret_key_base,
     'HS256'
   )
 
-  puts "Name: #{user.name}"
-  puts "Email: #{user.email}"
-  puts "ID: #{user.id}"
-  puts "Wallet Balance: $#{user.wallet.balance}"
-  puts "JWT Token: #{token}"
-  puts "------------------------"
+  puts "\n#{user.name} (ID: #{user.id})"
+  puts "Balance: $#{user.wallet.balance}"
+  puts "Token: #{token}"
 end
 
-puts "Now you can test:"
-puts "1. Deposits to each user's wallet"
-puts "2. Withdrawals from each user's wallet"
-puts "3. Transfers between users (e.g., Richard → Erlich → Jian Yang)"
-puts "4. Balance checks"
-puts "5. Transaction history"
+richard = users[0]
+erlich = users[1]
+
+puts "\n=== API Testing Instructions ==="
+puts "1. Deposit to Richard's wallet:"
+puts "   POST /api/v1/wallets/deposit"
+puts "   Headers: { Authorization: Bearer <Richard's Token> }"
+puts "   Body: { \"amount\": 1000 }"
+
+puts "\n2. Transfer from Richard to Erlich:"
+puts "   POST /api/v1/wallets/transfer"
+puts "   Headers: { Authorization: Bearer <Richard's Token> }"
+puts "   Body: { \"amount\": 500, \"receiver_id\": #{erlich.id} }"
+
+puts "\n3. Check Richard's balance:"
+puts "   GET /api/v1/wallets/balance"
+puts "   Headers: { Authorization: Bearer <Richard's Token> }"
+
+puts "\n4. Check Richard's transactions:"
+puts "   GET /api/v1/wallets/transactions"
+puts "   Headers: { Authorization: Bearer <Richard's Token> }"
+
+puts "\n5. Withdraw from Erlich's wallet:"
+puts "   POST /api/v1/wallets/withdraw"
+puts "   Headers: { Authorization: Bearer <Erlich's Token> }"
+puts "   Body: { \"amount\": 100 }"
