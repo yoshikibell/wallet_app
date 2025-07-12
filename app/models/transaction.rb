@@ -6,6 +6,7 @@ class Transaction < ApplicationRecord
   belongs_to :receiver, class_name: "Wallet", foreign_key: "receiver_id", optional: true
 
   enum :transaction_type, { deposit: 0, withdrawal: 1, transfer: 2 }
+  enum :status, { pending: 0, completed: 1, failed: 2 }
 
   validates :amount, presence: true, numericality: { greater_than: 0, precision: 15, scale: 2 }
   validate :validate_transfer_wallets, if: :transfer?
