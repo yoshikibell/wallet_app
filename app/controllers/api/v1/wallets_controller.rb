@@ -7,12 +7,16 @@ module Api
 
       rescue_from TransactionService::InsufficientFundsError, with: :handle_insufficient_funds
       rescue_from TransactionService::InvalidTransactionError, with: :handle_invalid_transaction
+      rescue_from ActionController::ParameterMissing, with: :handle_missing_parameter
+      rescue_from StandardError, with: :handle_generic_error
 
       # POST /api/v1/wallets/deposit
       def deposit
+        amount = amount_param
+
         transaction = TransactionService.create_deposit!(
           wallet: @wallet,
-          amount: amount_param
+          amount: amount
         )
 
         render_transaction_success("Deposit successful", transaction)
@@ -20,9 +24,11 @@ module Api
 
       # POST /api/v1/wallets/withdraw
       def withdraw
+        amount = amount_param
+
         transaction = TransactionService.create_withdrawal!(
           wallet: @wallet,
-          amount: amount_param
+          amount: amount
         )
 
         render_transaction_success("Withdrawal successful", transaction)
@@ -30,16 +36,16 @@ module Api
 
       # POST /api/v1/wallets/transfer
       def transfer
-        receiver = User.find_by(id: receiver_id_param)&.wallet
+        receiver_id = receiver_id_param
+        amount = amount_param
 
-        unless receiver
-          return render json: { error: "Receiver not found" }, status: :not_found
-        end
+        receiver = User.find_by(id: receiver_id)&.wallet
+        raise TransactionService::InvalidTransactionError.new("Receiver not found") unless receiver
 
         transaction = TransactionService.create_transfer!(
           from_wallet: @wallet,
           to_wallet: receiver,
-          amount: amount_param
+          amount: amount
         )
 
         render_transaction_success("Transfer successful", transaction)
@@ -79,16 +85,10 @@ module Api
 
       def amount_param
         params.require(:amount).to_d
-      rescue ActionController::ParameterMissing
-        render json: { error: "Amount is required" }, status: :bad_request
-        nil
       end
 
       def receiver_id_param
         params.require(:receiver_id)
-      rescue ActionController::ParameterMissing
-        render json: { error: "Receiver ID is required" }, status: :bad_request
-        nil
       end
 
       def render_transaction_success(message, transaction)
@@ -107,6 +107,17 @@ module Api
       def handle_invalid_transaction(error)
         log_error(error, "Invalid transaction attempted")
         render json: { error: error.message }, status: :unprocessable_entity
+      end
+
+      def handle_missing_parameter(error)
+        log_error(error, "Missing required parameter")
+
+        render json: { error: "Missing parameter" }, status: :bad_request
+      end
+
+      def handle_generic_error(error)
+        log_error(error, "Unexpected error occurred")
+        render json: { error: "An unexpected error occurred" }, status: :internal_server_error
       end
 
       def log_error(error, message = nil)
