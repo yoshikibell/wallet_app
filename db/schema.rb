@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_12_092813) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_12_114244) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,6 +22,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_12_092813) do
     t.integer "transaction_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "status", default: 0, null: false, comment: "Transaction status: 0=pending, 1=completed, 2=failed. Tracks transaction lifecycle for audit trails and error handling."
     t.index ["initiator_id"], name: "index_transactions_on_initiator_id"
     t.index ["receiver_id"], name: "index_transactions_on_receiver_id"
     t.index ["wallet_id"], name: "index_transactions_on_wallet_id"
