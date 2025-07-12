@@ -5,10 +5,10 @@ module Api
     class WalletsController < BaseController
       before_action :set_wallet
 
+      rescue_from StandardError, with: :handle_generic_error
       rescue_from TransactionService::InsufficientFundsError, with: :handle_insufficient_funds
       rescue_from TransactionService::InvalidTransactionError, with: :handle_invalid_transaction
       rescue_from ActionController::ParameterMissing, with: :handle_missing_parameter
-      rescue_from StandardError, with: :handle_generic_error
 
       # POST /api/v1/wallets/deposit
       def deposit
